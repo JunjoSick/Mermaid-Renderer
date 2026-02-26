@@ -1,0 +1,882 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Mermaid Studio</title>
+  <link
+    rel="icon"
+    type="image/svg+xml"
+    href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%236750A4'/%3E%3Cpath d='M8 20l4-4m0 0l4 4m-4-4v-6m8 10l-4-4' stroke='white' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"
+  />
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&family=Roboto+Mono:wght@400;500&family=Roboto:wght@400;500;700&display=swap"
+    rel="stylesheet"
+  />
+
+  <!-- Tailwind CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ["Roboto", "sans-serif"],
+            mono: ["Roboto Mono", "monospace"],
+          },
+          colors: {
+            md: {
+              bg: "#FFFBFE",
+              "on-bg": "#1C1B1F",
+              primary: "#6750A4",
+              "on-primary": "#FFFFFF",
+              "primary-container": "#EADDFF",
+              "on-primary-container": "#21005D",
+              secondary: "#625B71",
+              "secondary-container": "#E8DEF8",
+              "on-secondary-container": "#1D192B",
+              tertiary: "#7D5260",
+              "tertiary-container": "#FFD8E4",
+              "on-tertiary-container": "#31111D",
+              surface: "#FFFBFE",
+              "surface-container-low": "#F7F2FA",
+              "surface-container": "#F3EDF7",
+              "surface-container-high": "#ECE6F0",
+              "surface-variant": "#E7E0EC",
+              "on-surface": "#1C1B1F",
+              "on-surface-variant": "#49454F",
+              outline: "#79747E",
+              "outline-variant": "#CAC4D0",
+              error: "#B3261E",
+              "error-container": "#F9DEDC",
+              "on-error-container": "#410E0B",
+              "inverse-surface": "#313033",
+              "inverse-on-surface": "#F4EFF4",
+            },
+          },
+        },
+      },
+    };
+  </script>
+
+  <!-- Mermaid -->
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.min.js"></script>
+
+  <style>
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: "Roboto", sans-serif;
+      background: #fffbfe;
+      color: #1c1b1f;
+      margin: 0;
+    }
+    .material-symbols-rounded {
+      font-variation-settings:
+        "FILL" 0,
+        "wght" 400,
+        "GRAD" 0,
+        "opsz" 20;
+      font-size: 20px;
+      line-height: 1;
+      user-select: none;
+    }
+    #editor {
+      font-family: "Roboto Mono", monospace;
+      resize: none;
+      tab-size: 2;
+      outline: none;
+    }
+    #editor::placeholder {
+      color: #49454f80;
+    }
+    #preview-area svg {
+      max-width: 100%;
+      height: auto;
+      animation: diagramIn 200ms ease-out;
+    }
+    @keyframes diagramIn {
+      from {
+        opacity: 0;
+        transform: scale(0.97);
+      }
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cac4d0;
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #79747e;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+
+<body class="h-screen flex flex-col overflow-hidden font-sans bg-md-bg text-md-on-bg">
+  <!-- ======= DECORATIVE BLUR SHAPES ======= -->
+  <div aria-hidden="true" class="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+    <div
+      class="absolute -top-40 -right-40 w-[500px] h-[500px] rounded-full bg-md-primary/10 blur-[100px]"
+    ></div>
+    <div
+      class="absolute top-1/2 -left-60 w-[400px] h-[400px] rounded-full bg-md-tertiary/8 blur-[100px]"
+    ></div>
+    <div
+      class="absolute -bottom-20 right-1/4 w-[350px] h-[350px] rounded-full bg-md-secondary-container/20 blur-[80px]"
+    ></div>
+  </div>
+
+  <!-- ======= TOAST ======= -->
+  <div
+    id="toast"
+    class="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 bg-md-inverse-surface text-md-inverse-on-surface px-5 py-3 rounded-full shadow-lg transition-all duration-300 ease-[cubic-bezier(0.2,0,0,1)] translate-y-24 opacity-0 pointer-events-none"
+  >
+    <span id="toast-icon" class="material-symbols-rounded text-[18px]"
+      >check_circle</span
+    >
+    <span id="toast-msg" class="text-sm font-medium">Done</span>
+  </div>
+
+  <!-- ======= HEADER ======= -->
+  <header
+    class="relative z-20 shrink-0 h-14 md:h-16 px-3 md:px-5 flex items-center justify-between backdrop-blur-lg bg-md-surface/80 border-b border-md-outline-variant/30"
+  >
+    <!-- Left: Logo + title -->
+    <div class="flex items-center gap-2.5">
+      <div
+        class="w-9 h-9 rounded-xl bg-md-primary flex items-center justify-center shadow-sm"
+      >
+        <span class="material-symbols-rounded text-white !text-[20px]"
+          >account_tree</span
+        >
+      </div>
+      <h1 class="text-lg font-medium tracking-tight hidden sm:block">
+        Mermaid Studio
+      </h1>
+    </div>
+
+    <!-- Right: Actions -->
+    <div class="flex items-center gap-1.5 md:gap-2">
+      <!-- Templates -->
+      <div class="relative">
+        <button
+          id="templates-btn"
+          class="inline-flex items-center gap-1.5 h-9 px-4 rounded-full text-sm font-medium bg-md-secondary-container text-md-on-secondary-container hover:bg-md-secondary-container/80 active:scale-95 transition-all duration-200 ease-[cubic-bezier(0.2,0,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-md-primary focus-visible:ring-offset-2 focus-visible:ring-offset-md-bg"
+        >
+          <span class="material-symbols-rounded !text-[18px]">grid_view</span>
+          <span class="hidden sm:inline">Templates</span>
+          <span class="material-symbols-rounded !text-[16px]"
+            >expand_more</span
+          >
+        </button>
+        <div
+          id="templates-dropdown"
+          class="hidden absolute right-0 top-full mt-2 w-56 py-1 bg-md-surface-container-low rounded-xl shadow-lg border border-md-outline-variant/20 z-30 origin-top-right"
+        >
+          <button data-tpl="flowchart" class="tpl-item">
+            <span class="material-symbols-rounded !text-[18px]"
+              >account_tree</span
+            >Flowchart
+          </button>
+          <button data-tpl="sequence" class="tpl-item">
+            <span class="material-symbols-rounded !text-[18px]"
+              >swap_horiz</span
+            >Sequence
+          </button>
+          <button data-tpl="classDiagram" class="tpl-item">
+            <span class="material-symbols-rounded !text-[18px]">class</span
+            >Class Diagram
+          </button>
+          <button data-tpl="state" class="tpl-item">
+            <span class="material-symbols-rounded !text-[18px]"
+              >radio_button_checked</span
+            >State
+          </button>
+          <button data-tpl="er" class="tpl-item">
+            <span class="material-symbols-rounded !text-[18px]">database</span
+            >ER Diagram
+          </button>
+          <button data-tpl="gantt" class="tpl-item">
+            <span class="material-symbols-rounded !text-[18px]"
+              >view_timeline</span
+            >Gantt Chart
+          </button>
+          <button data-tpl="pie" class="tpl-item">
+            <span class="material-symbols-rounded !text-[18px]"
+              >pie_chart</span
+            >Pie Chart
+          </button>
+          <button data-tpl="git" class="tpl-item">
+            <span class="material-symbols-rounded !text-[18px]">commit</span
+            >Git Graph
+          </button>
+        </div>
+      </div>
+
+      <!-- Separator -->
+      <div class="w-px h-6 bg-md-outline-variant/40 hidden md:block"></div>
+
+      <!-- Copy SVG -->
+      <button
+        id="btn-copy"
+        title="Copy SVG"
+        class="inline-flex items-center gap-1.5 h-9 px-3 md:px-4 rounded-full text-sm font-medium text-md-primary border border-md-outline/40 hover:bg-md-primary/10 active:scale-95 transition-all duration-200 ease-[cubic-bezier(0.2,0,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-md-primary focus-visible:ring-offset-2 focus-visible:ring-offset-md-bg"
+      >
+        <span class="material-symbols-rounded !text-[18px]">content_copy</span>
+        <span class="hidden md:inline">Copy</span>
+      </button>
+
+      <!-- Export SVG -->
+      <button
+        id="btn-svg"
+        title="Export SVG"
+        class="inline-flex items-center gap-1.5 h-9 px-3 md:px-4 rounded-full text-sm font-medium text-md-primary border border-md-outline/40 hover:bg-md-primary/10 active:scale-95 transition-all duration-200 ease-[cubic-bezier(0.2,0,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-md-primary focus-visible:ring-offset-2 focus-visible:ring-offset-md-bg"
+      >
+        <span class="material-symbols-rounded !text-[18px]">download</span>
+        <span class="hidden md:inline">SVG</span>
+      </button>
+
+      <!-- Export PNG -->
+      <button
+        id="btn-png"
+        title="Export PNG"
+        class="inline-flex items-center gap-1.5 h-9 px-3 md:px-4 rounded-full text-sm font-medium bg-md-primary text-md-on-primary hover:bg-md-primary/90 active:scale-95 shadow-sm hover:shadow-md transition-all duration-200 ease-[cubic-bezier(0.2,0,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-md-primary focus-visible:ring-offset-2 focus-visible:ring-offset-md-bg"
+      >
+        <span class="material-symbols-rounded !text-[18px]">image</span>
+        <span class="hidden md:inline">PNG</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ======= MOBILE TABS ======= -->
+  <div
+    class="md:hidden relative z-10 shrink-0 flex bg-md-surface-container-low border-b border-md-outline-variant/20"
+  >
+    <button
+      data-tab="editor"
+      class="mobile-tab flex-1 flex items-center justify-center gap-2 h-12 text-sm font-medium transition-colors duration-200"
+    >
+      <span class="material-symbols-rounded !text-[18px]">code</span>
+      Editor
+    </button>
+    <button
+      data-tab="preview"
+      class="mobile-tab flex-1 flex items-center justify-center gap-2 h-12 text-sm font-medium transition-colors duration-200"
+    >
+      <span class="material-symbols-rounded !text-[18px]">visibility</span>
+      Preview
+    </button>
+  </div>
+
+  <!-- ======= MAIN PANELS ======= -->
+  <main
+    class="relative z-10 flex-1 flex flex-col md:flex-row gap-2.5 md:gap-3 p-2.5 md:p-3 overflow-hidden min-h-0"
+  >
+    <!-- Editor Panel -->
+    <div
+      id="panel-editor"
+      class="flex-1 flex flex-col bg-md-surface-container rounded-3xl overflow-hidden shadow-sm min-h-0"
+    >
+      <div
+        class="shrink-0 px-4 py-2.5 flex items-center justify-between border-b border-md-outline-variant/15"
+      >
+        <span
+          class="text-xs font-medium tracking-wide uppercase text-md-on-surface-variant/70"
+          >Editor</span
+        >
+        <span
+          id="line-info"
+          class="text-xs tabular-nums text-md-on-surface-variant/50"
+          >Ln 1</span
+        >
+      </div>
+      <textarea
+        id="editor"
+        class="flex-1 w-full p-4 bg-transparent text-[13px] md:text-sm leading-relaxed text-md-on-surface min-h-0"
+        spellcheck="false"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="off"
+        placeholder="Enter Mermaid syntax..."
+      ></textarea>
+    </div>
+
+    <!-- Preview Panel -->
+    <div
+      id="panel-preview"
+      class="flex-1 flex flex-col bg-md-surface-container rounded-3xl overflow-hidden shadow-sm min-h-0"
+    >
+      <div
+        class="shrink-0 px-4 py-2.5 flex items-center justify-between border-b border-md-outline-variant/15"
+      >
+        <span
+          class="text-xs font-medium tracking-wide uppercase text-md-on-surface-variant/70"
+          >Preview</span
+        >
+        <div class="flex items-center gap-0.5">
+          <button
+            id="zoom-out"
+            title="Zoom out"
+            class="w-8 h-8 rounded-full flex items-center justify-center text-md-on-surface-variant hover:bg-md-primary/10 active:scale-90 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-md-primary"
+          >
+            <span class="material-symbols-rounded !text-[18px]">remove</span>
+          </button>
+          <button
+            id="zoom-reset"
+            title="Reset zoom"
+            class="h-8 px-2 rounded-full flex items-center justify-center text-xs font-medium tabular-nums text-md-on-surface-variant hover:bg-md-primary/10 active:scale-90 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-md-primary min-w-[3rem]"
+          >
+            <span id="zoom-level">100%</span>
+          </button>
+          <button
+            id="zoom-in"
+            title="Zoom in"
+            class="w-8 h-8 rounded-full flex items-center justify-center text-md-on-surface-variant hover:bg-md-primary/10 active:scale-90 transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-md-primary"
+          >
+            <span class="material-symbols-rounded !text-[18px]">add</span>
+          </button>
+        </div>
+      </div>
+
+      <div
+        id="preview-scroll"
+        class="flex-1 overflow-auto flex items-start justify-center p-4 min-h-0"
+      >
+        <!-- Rendered diagram -->
+        <div
+          id="preview-area"
+          class="transition-transform duration-200 ease-[cubic-bezier(0.2,0,0,1)] origin-top"
+        ></div>
+
+        <!-- Error display -->
+        <div
+          id="error-display"
+          class="hidden w-full max-w-md mx-auto flex flex-col items-center gap-3 py-10 px-6 text-center"
+        >
+          <div
+            class="w-12 h-12 rounded-full bg-md-error-container flex items-center justify-center"
+          >
+            <span
+              class="material-symbols-rounded text-md-error !text-[24px]"
+              style="font-variation-settings: 'FILL' 1"
+              >error</span
+            >
+          </div>
+          <p class="text-sm font-medium text-md-error">Syntax Error</p>
+          <pre
+            id="error-msg"
+            class="text-xs text-md-on-surface-variant bg-md-error-container/40 rounded-xl px-4 py-3 max-h-40 overflow-auto w-full text-left font-mono whitespace-pre-wrap"
+          ></pre>
+        </div>
+
+        <!-- Empty state -->
+        <div
+          id="empty-state"
+          class="hidden flex-col items-center gap-3 py-16 text-center"
+        >
+          <div
+            class="w-16 h-16 rounded-[20px] bg-md-surface-variant/60 flex items-center justify-center"
+          >
+            <span
+              class="material-symbols-rounded text-md-on-surface-variant/40 !text-[32px]"
+              >schema</span>
+          </div>
+          <p class="text-sm text-md-on-surface-variant/60">
+            Start typing or pick a template
+          </p>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <style>
+    .tpl-item {
+      display: flex;
+      align-items: center;
+      gap: 0.625rem;
+      width: 100%;
+      padding: 0.5rem 1rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #1c1b1f;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      transition: background 200ms;
+      font-family: "Roboto", sans-serif;
+    }
+    .tpl-item:hover {
+      background: #6750a41a;
+    }
+    .tpl-item:active {
+      background: #6750a40d;
+    }
+    .mobile-tab {
+      color: #49454f;
+      border: none;
+      background: transparent;
+      cursor: pointer;
+      position: relative;
+    }
+    .mobile-tab.active {
+      color: #6750a4;
+    }
+    .mobile-tab.active::after {
+      content: "";
+      position: absolute;
+      bottom: 0;
+      left: 20%;
+      right: 20%;
+      height: 3px;
+      background: #6750a4;
+      border-radius: 3px 3px 0 0;
+    }
+
+    /* Hide panel on mobile depending on active tab */
+    @media (max-width: 767px) {
+      #panel-editor.panel-hidden,
+      #panel-preview.panel-hidden {
+        display: none !important;
+      }
+    }
+  </style>
+
+  <script>
+    // ===== TEMPLATES =====
+    const TEMPLATES = {
+      flowchart: `flowchart TD
+    A[Start] --> B{Is it working?}
+    B -->|Yes| C[Great!]
+    B -->|No| D[Debug]
+    D --> B
+    C --> E[Ship it 🚀]`,
+
+      sequence: `sequenceDiagram
+    participant U as User
+    participant S as Server
+    participant DB as Database
+
+    U->>S: POST /login
+    S->>DB: Query user
+    DB-->>S: User data
+    S-->>U: 200 OK + JWT`,
+
+      classDiagram: `classDiagram
+    class Animal {
+        +String name
+        +int age
+        +makeSound() void
+    }
+    class Dog {
+        +String breed
+        +fetch() void
+    }
+    class Cat {
+        +bool isIndoor
+        +purr() void
+    }
+    Animal <|-- Dog
+    Animal <|-- Cat`,
+
+      state: `stateDiagram-v2
+    [*] --> Idle
+    Idle --> Processing : Submit
+    Processing --> Success : OK
+    Processing --> Error : Fail
+    Error --> Idle : Retry
+    Success --> [*]`,
+
+      er: `erDiagram
+    CUSTOMER ||--o{ ORDER : places
+    ORDER ||--|{ LINE_ITEM : contains
+    PRODUCT ||--o{ LINE_ITEM : "is in"
+    CUSTOMER {
+        string name
+        string email
+    }
+    ORDER {
+        int id
+        date created
+    }
+    PRODUCT {
+        int id
+        string name
+        float price
+    }`,
+
+      gantt: `gantt
+    title Project Timeline
+    dateFormat  YYYY-MM-DD
+    section Design
+        Wireframes       :done, d1, 2025-01-01, 7d
+        Mockups          :active, d2, after d1, 5d
+    section Development
+        Frontend         :d3, after d2, 10d
+        Backend          :d4, after d2, 12d
+    section Testing
+        QA               :d5, after d4, 5d`,
+
+      pie: `pie title Tech Stack Preferences
+    "JavaScript" : 35
+    "Python" : 25
+    "TypeScript" : 20
+    "Go" : 12
+    "Rust" : 8`,
+
+      git: `gitGraph
+    commit
+    branch feature
+    checkout feature
+    commit
+    commit
+    checkout main
+    merge feature
+    commit
+    branch hotfix
+    commit
+    checkout main
+    merge hotfix`,
+    };
+
+    // ===== STATE =====
+    const LS_KEY = "mermaid-studio-code";
+    let currentZoom = 100;
+    let renderCounter = 0;
+    let debounceTimer = null;
+
+    // ===== DOM REFS =====
+    const editor = document.getElementById("editor");
+    const previewArea = document.getElementById("preview-area");
+    const errorDisplay = document.getElementById("error-display");
+    const errorMsg = document.getElementById("error-msg");
+    const emptyState = document.getElementById("empty-state");
+    const lineInfo = document.getElementById("line-info");
+    const zoomLevel = document.getElementById("zoom-level");
+    const toast = document.getElementById("toast");
+    const toastMsg = document.getElementById("toast-msg");
+    const toastIcon = document.getElementById("toast-icon");
+    const templatesBtn = document.getElementById("templates-btn");
+    const templatesDropdown = document.getElementById("templates-dropdown");
+
+    // ===== INIT MERMAID =====
+    mermaid.initialize({
+      startOnLoad: false,
+      theme: "default",
+      fontFamily: "Roboto, sans-serif",
+      securityLevel: "loose",
+      themeVariables: {
+        primaryColor: "#EADDFF",
+        primaryTextColor: "#21005D",
+        primaryBorderColor: "#6750A4",
+        lineColor: "#79747E",
+        secondaryColor: "#E8DEF8",
+        tertiaryColor: "#FFD8E4",
+        background: "#F3EDF7",
+        mainBkg: "#EADDFF",
+        nodeBorder: "#6750A4",
+        clusterBkg: "#F3EDF7",
+        titleColor: "#1C1B1F",
+        edgeLabelBackground: "#F3EDF7",
+        nodeTextColor: "#1C1B1F",
+      },
+    });
+
+    // ===== RENDER =====
+    async function renderDiagram() {
+      const code = editor.value.trim();
+
+      if (!code) {
+        previewArea.innerHTML = "";
+        previewArea.classList.add("hidden");
+        errorDisplay.classList.add("hidden");
+        emptyState.classList.remove("hidden");
+        emptyState.classList.add("flex");
+        return;
+      }
+
+      emptyState.classList.add("hidden");
+      emptyState.classList.remove("flex");
+
+      renderCounter++;
+      const id = `mermaid-${renderCounter}`;
+
+      try {
+        const { svg } = await mermaid.render(id, code);
+        previewArea.innerHTML = svg;
+        previewArea.classList.remove("hidden");
+        errorDisplay.classList.add("hidden");
+      } catch (err) {
+        previewArea.innerHTML = "";
+        previewArea.classList.add("hidden");
+        errorDisplay.classList.remove("hidden");
+        errorMsg.textContent = err.message || "Unable to parse diagram";
+        // clean up failed render element
+        const badEl = document.getElementById("d" + id);
+        if (badEl) badEl.remove();
+      }
+    }
+
+    function scheduleRender() {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(renderDiagram, 400);
+    }
+
+    // ===== EDITOR EVENTS =====
+    editor.addEventListener("input", () => {
+      localStorage.setItem(LS_KEY, editor.value);
+      scheduleRender();
+    });
+
+    editor.addEventListener("keyup", updateLineInfo);
+    editor.addEventListener("click", updateLineInfo);
+
+    function updateLineInfo() {
+      const pos = editor.selectionStart;
+      const lines = editor.value.substring(0, pos).split("\n");
+      lineInfo.textContent = `Ln ${lines.length}, Col ${lines[lines.length - 1].length + 1}`;
+    }
+
+    // Tab key support in editor
+    editor.addEventListener("keydown", (e) => {
+      if (e.key === "Tab") {
+        e.preventDefault();
+        const start = editor.selectionStart;
+        const end = editor.selectionEnd;
+        editor.value =
+          editor.value.substring(0, start) +
+          "  " +
+          editor.value.substring(end);
+        editor.selectionStart = editor.selectionEnd = start + 2;
+        localStorage.setItem(LS_KEY, editor.value);
+        scheduleRender();
+      }
+    });
+
+    // ===== ZOOM =====
+    document.getElementById("zoom-in").addEventListener("click", () => {
+      currentZoom = Math.min(300, currentZoom + 25);
+      applyZoom();
+    });
+    document.getElementById("zoom-out").addEventListener("click", () => {
+      currentZoom = Math.max(25, currentZoom - 25);
+      applyZoom();
+    });
+    document.getElementById("zoom-reset").addEventListener("click", () => {
+      currentZoom = 100;
+      applyZoom();
+    });
+
+    function applyZoom() {
+      previewArea.style.transform = `scale(${currentZoom / 100})`;
+      zoomLevel.textContent = `${currentZoom}%`;
+    }
+
+    // ===== TEMPLATES DROPDOWN =====
+    templatesBtn.addEventListener("click", (e) => {
+      e.stopPropagation();
+      templatesDropdown.classList.toggle("hidden");
+    });
+
+    document.addEventListener("click", () => {
+      templatesDropdown.classList.add("hidden");
+    });
+
+    templatesDropdown.addEventListener("click", (e) => {
+      const btn = e.target.closest("[data-tpl]");
+      if (!btn) return;
+      const key = btn.dataset.tpl;
+      if (TEMPLATES[key]) {
+        editor.value = TEMPLATES[key];
+        localStorage.setItem(LS_KEY, editor.value);
+        templatesDropdown.classList.add("hidden");
+        scheduleRender();
+        updateLineInfo();
+      }
+    });
+
+    // ===== TOAST =====
+    let toastTimer = null;
+    function showToast(msg, icon = "check_circle") {
+      clearTimeout(toastTimer);
+      toastMsg.textContent = msg;
+      toastIcon.textContent = icon;
+      toast.classList.remove("translate-y-24", "opacity-0", "pointer-events-none");
+      toast.classList.add("translate-y-0", "opacity-100");
+      toastTimer = setTimeout(() => {
+        toast.classList.add("translate-y-24", "opacity-0", "pointer-events-none");
+        toast.classList.remove("translate-y-0", "opacity-100");
+      }, 2500);
+    }
+
+    // ===== GET SVG STRING =====
+    function getSvgString() {
+      const svg = previewArea.querySelector("svg");
+      if (!svg) {
+        showToast("No diagram to export", "warning");
+        return null;
+      }
+      const clone = svg.cloneNode(true);
+      clone.removeAttribute("style");
+      clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+      return new XMLSerializer().serializeToString(clone);
+    }
+
+    // ===== COPY SVG =====
+    document.getElementById("btn-copy").addEventListener("click", async () => {
+      const svgStr = getSvgString();
+      if (!svgStr) return;
+      try {
+        await navigator.clipboard.writeText(svgStr);
+        showToast("SVG copied to clipboard");
+      } catch {
+        showToast("Copy failed", "error");
+      }
+    });
+
+    // ===== EXPORT SVG =====
+    document.getElementById("btn-svg").addEventListener("click", () => {
+      const svgStr = getSvgString();
+      if (!svgStr) return;
+      downloadBlob(
+        new Blob([svgStr], { type: "image/svg+xml" }),
+        "diagram.svg"
+      );
+      showToast("SVG downloaded");
+    });
+
+    // ===== EXPORT PNG (2x) =====
+    document.getElementById("btn-png").addEventListener("click", () => {
+      const svg = previewArea.querySelector("svg");
+      if (!svg) {
+        showToast("No diagram to export", "warning");
+        return;
+      }
+      const clone = svg.cloneNode(true);
+      clone.removeAttribute("style");
+      clone.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+
+      const box = svg.getBoundingClientRect();
+      const scale = 2;
+      const w = box.width * scale;
+      const h = box.height * scale;
+
+      clone.setAttribute("width", box.width);
+      clone.setAttribute("height", box.height);
+
+      const data = new XMLSerializer().serializeToString(clone);
+      const url = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(data);
+
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+
+      const img = new Image();
+      img.onload = () => {
+        ctx.fillStyle = "#FFFBFE";
+        ctx.fillRect(0, 0, w, h);
+        ctx.drawImage(img, 0, 0, w, h);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            downloadBlob(blob, "diagram.png");
+            showToast("PNG downloaded (2×)");
+          }
+        }, "image/png");
+      };
+      img.onerror = () => showToast("PNG export failed", "error");
+      img.src = url;
+    });
+
+    function downloadBlob(blob, filename) {
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(blob);
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(a.href);
+    }
+
+    // ===== MOBILE TABS =====
+    const mobileTabs = document.querySelectorAll(".mobile-tab");
+    const panelEditor = document.getElementById("panel-editor");
+    const panelPreview = document.getElementById("panel-preview");
+
+    function setMobileTab(tab) {
+      mobileTabs.forEach((t) => {
+        t.classList.toggle("active", t.dataset.tab === tab);
+      });
+      if (tab === "editor") {
+        panelEditor.classList.remove("panel-hidden");
+        panelPreview.classList.add("panel-hidden");
+      } else {
+        panelEditor.classList.add("panel-hidden");
+        panelPreview.classList.remove("panel-hidden");
+      }
+    }
+
+    mobileTabs.forEach((btn) => {
+      btn.addEventListener("click", () => setMobileTab(btn.dataset.tab));
+    });
+
+    // Default to editor tab on mobile
+    setMobileTab("editor");
+
+    // ===== KEYBOARD SHORTCUTS =====
+    document.addEventListener("keydown", (e) => {
+      // Ctrl/Cmd + S — prevent default, just save to LS
+      if ((e.ctrlKey || e.metaKey) && e.key === "s") {
+        e.preventDefault();
+        localStorage.setItem(LS_KEY, editor.value);
+        showToast("Saved", "save");
+      }
+      // Ctrl/Cmd + Shift + C — copy SVG
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key === "C") {
+        e.preventDefault();
+        document.getElementById("btn-copy").click();
+      }
+      // Escape — close dropdown
+      if (e.key === "Escape") {
+        templatesDropdown.classList.add("hidden");
+      }
+    });
+
+    // ===== STARTUP =====
+    const saved = localStorage.getItem(LS_KEY);
+    if (saved) {
+      editor.value = saved;
+    } else {
+      editor.value = TEMPLATES.flowchart;
+    }
+    updateLineInfo();
+    renderDiagram();
+  </script>
+</body>
+
+</html>
